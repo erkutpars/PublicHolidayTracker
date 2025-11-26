@@ -1,0 +1,78 @@
+public class HolidayService
+{
+    private Dictionary<int, List<Holiday>> holidayCache = new Dictionary<int, List<Holiday>>();
+    private ApiService apiService = new ApiService();
+
+    public async Task<List<Holiday>> GetHolidaysByYearAsync(int year)
+    {
+        if (!holidayCache.ContainsKey(year))
+        {
+            var holidays = await apiService.GetHolidaysAsync(year);
+            holidayCache[year] = holidays;
+        }
+        return holidayCache[year];
+    }
+
+    public async Task ShowHolidaysByYear()
+    {
+        Console.Write("Yıl girin (2023, 2024, 2025): ");
+        int year = int.Parse(Console.ReadLine());
+        var holidays = await GetHolidaysByYearAsync(year);
+
+        Console.WriteLine($"\n {year} Resmi Tatilleri:");
+        foreach (var h in holidays)
+        {
+            Console.WriteLine($"{h.date} - {h.localName} ({h.name})");
+        }
+    }
+
+    public async Task SearchHolidayByDate()
+    {
+        Console.Write("Tarih girin (gg-aa): ");
+        string input = Console.ReadLine();
+
+        foreach (int year in new[] { 2023, 2024, 2025 })
+        {
+            var holidays = await GetHolidaysByYearAsync(year);
+            var result = holidays.FirstOrDefault(h => h.date.Substring(5, 5) == input);
+
+            if (result != null)
+            {
+                Console.WriteLine($"\nBulundu: {result.date} - {result.localName} ({result.name})");
+                return;
+            }
+        }
+        Console.WriteLine("Bu tarihe ait tatil bulunamadı.");
+    }
+
+    public async Task SearchHolidayByName()
+    {
+        Console.Write("Tatil adı girin: ");
+        string input = Console.ReadLine().ToLower();
+
+        foreach (int year in new[] { 2023, 2024, 2025 })
+        {
+            var holidays = await GetHolidaysByYearAsync(year);
+            var filtered = holidays.Where(h => h.localName.ToLower().Contains(input) || h.name.ToLower().Contains(input));
+
+            foreach (var h in filtered)
+            {
+                Console.WriteLine($"{h.date} - {h.localName} ({h.name})");
+            }
+        }
+    }
+
+    public async Task ShowAllHolidays()
+    {
+        Console.WriteLine("\n2023–2025 Arası Tüm Tatiller:");
+        foreach (int year in new[] { 2023, 2024, 2025 })
+        {
+            var holidays = await GetHolidaysByYearAsync(year);
+            Console.WriteLine($"\n===== {year} =====");
+            foreach (var h in holidays)
+            {
+                Console.WriteLine($"{h.date} - {h.localName} ({h.name})");
+            }
+        }
+    }
+}
