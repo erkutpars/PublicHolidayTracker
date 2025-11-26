@@ -1,0 +1,22 @@
+using System.Net.Http;
+using System.Text.Json;
+
+public class ApiService
+{
+    private static readonly HttpClient client = new HttpClient();
+
+    public async Task<List<Holiday>> GetHolidaysAsync(int year)
+    {
+        string url = $"https://date.nager.at/api/v3/PublicHolidays/{year}/TR";
+        var response = await client.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"API isteği başarısız oldu! Status Code: {response.StatusCode}");
+            return new List<Holiday>();
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<Holiday>>(json);
+    }
+}
